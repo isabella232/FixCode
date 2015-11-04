@@ -11,6 +11,14 @@
 #import "Aspects.h"
 #import "FixCode.h"
 
+@interface NSObject (SuppressWarning)
+
+-(void)refreshUI;
+
+@end
+
+#pragma mark -
+
 @interface NSView (Debug)
 
 -(NSString*)_subtreeDescription;
@@ -128,10 +136,18 @@
         NSLog(@"Error: %@", error);
     }
 
-    [objc_getClass("Xcode3CodesignTroubleshootingViewController") aspect_hookSelector:@selector(viewDidAppear) withOptions:AspectPositionAfter usingBlock:^(id<AspectInfo> info) {
+    id block = ^(id<AspectInfo> info) {
         NSView* view = [info.instance view];
         [self findAndReplaceFixIssueButtonInView:view];
-    } error:&error];
+    };
+
+    [objc_getClass("Xcode3CodesignTroubleshootingViewController") aspect_hookSelector:@selector(refreshUI) withOptions:AspectPositionAfter usingBlock:block error:&error];
+
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+
+    [objc_getClass("Xcode3CodesignTroubleshootingViewController") aspect_hookSelector:@selector(viewDidAppear) withOptions:AspectPositionAfter usingBlock:block error:&error];
 
     if (error) {
         NSLog(@"Error: %@", error);
